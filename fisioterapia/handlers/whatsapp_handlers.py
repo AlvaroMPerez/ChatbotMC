@@ -17,7 +17,7 @@ BUSINESS_PHONE_NUMBER_ID = os.getenv("BUSINESS_PHONE_NUMBER_ID")
 
 class MessageHandler:
     # ---------- Inicialización ----------
-    def __init__(self, wa_id: str, name: str, message: dict, body: str | None, horario: bool, ts_raw: int, hora_local:datetime) -> None:
+    def __init__(self, wa_id: str, name: str, message: dict, body: str | None, horario: bool, ts_raw: int, hora_local) -> None:
         self.wa_id   = wa_id
         self.message = message
         self.body    = body or ""
@@ -49,7 +49,7 @@ class MessageHandler:
         
         if passed: 
             print(f"✅ Usuario desbloqueado: {msg}")
-            user_state: str = get_user_state(self.wa_id)
+            user_state = get_user_state(self.wa_id)
             print (f"📝 Estado del usuario: {user_state!r}")    
             if self.wants_promotions():
                 
@@ -63,7 +63,6 @@ class MessageHandler:
                     )
                     # Aquí hace falta la parde de promociones 
                     
-                     
                     # ---- Inicia flujo del bot ------
                     
                     fis.politica_privacidad()
