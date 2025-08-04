@@ -1,4 +1,5 @@
 import sqlite3
+from typing import Optional
 
 DB_PATH = "recived_messages_ids.db"
 
@@ -9,7 +10,7 @@ def set_user_state(wa_id : str,state : str):
     conn.commit()
     conn.close()
 
-def get_user_state(wa_id):
+def get_user_state(wa_id:str) -> Optional[str]:
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT state FROM user_states WHERE wa_id = ?", (wa_id,))
@@ -17,7 +18,7 @@ def get_user_state(wa_id):
     conn.close()
     return row[0] if row else None
 
-def clear_user_state(wa_id):
+def clear_user_state(wa_id:str):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("DELETE FROM user_states WHERE wa_id = ?", (wa_id,))

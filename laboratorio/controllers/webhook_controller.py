@@ -1,8 +1,9 @@
-from flask import Flask, request, jsonify, abort, Blueprint
+from flask import Flask, request, jsonify, abort, Blueprint, make_response
 import json
 import hmac
 import os
 import hashlib
+from dotenv import load_dotenv
 from datetime import datetime
 from models.message_model import save_message_id, message_id_exist
 from services.whatsapp_service import send_whatsapp_message
@@ -13,6 +14,9 @@ from models.user_state import (print_all_user_states,
 from datetime import datetime
 from utils.helpers import (esta_en_horario,
                            unix_to_america)
+from typing import Optional
+
+load_dotenv()
 
 
 APP_SECRET = os.getenv('APP_SECRET')
@@ -41,18 +45,24 @@ def webhook():
         abort(400, "Algoritmo sha no soportado")
 
     # Genera la firma propia usando APP_SECRET & hmac https://docs.python.org/3/library/hmac.html
+    if APP_SECRET is None:
+        raise ValueError("APP_SECRET no puede ser None. Asegúrate de definirlo correctamente.")
     mac = hmac.new(APP_SECRET.encode(), request.data, hashlib.sha256)
     expected_hash = mac.hexdigest()
     if not hmac.compare_digest(expected_hash, sha_signature):
         abort(400, "Firma no valida")
 
     # freccuency
-    name:str= None
-    wa_id:str = None
-    body:str = None
-    horario:bool = None
+    name:str | None = None
+    wa_id:str = ""
+    body:str | None  = None
+    horario:bool | None = None
 
-    payload = request.json
+    payload: Optional[dict] = request.json
+    if not payload:
+        print("No payload found")
+        abort(400, "No payload found")
+
     print(json.dumps(payload, indent=2))
 
     if payload.get("object") != "whatsapp_business_account":
@@ -107,9 +117,9 @@ def webhook_verification():
     # Verify if mode and token are right
     if mode == 'subscribe' and token == WEBHOOK_VERIFY_TOKEN:
         # Responder con 200 OK y el challenge token de la petición
-        return challenge, 200
+        return make_response(challenge, 200)
     else:
-        return "Forbidden", 403
+        return make_response("Forbidden", 403)
 
 @webhook_bp.route('/', methods=['GET'])
 def home():

@@ -1,9 +1,10 @@
 from flask import Flask
 import os
+from dotenv import load_dotenv
 from controllers.webhook_controller import webhook_bp
 from db.init_db import init_db
 
-
+load_dotenv()
 
 app = Flask(__name__)
 app.register_blueprint(webhook_bp)

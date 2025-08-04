@@ -9,6 +9,7 @@ from models.user_state import (
 )
 from utils.helpers import is_8_hours
 from flows.dudas import espere_un_momento
+from typing import Optional, cast
 import emoji, os
 import datetime
 import re
@@ -18,7 +19,7 @@ BUSINESS_PHONE_NUMBER_ID = os.getenv("BUSINESS_PHONE_NUMBER_ID")
 
 class MessageHandler:
     # ---------- Inicialización ----------
-    def __init__(self, wa_id: str, name: str, message: dict, body: str | None, horario: bool, ts_raw: int, hora_local:datetime) -> None:
+    def __init__(self, wa_id: Optional[str], name, message: dict, body: str | None, horario: bool, ts_raw: int, hora_local) -> None:
         self.wa_id   = wa_id
         self.message = message
         self.body    = body or ""
@@ -41,20 +42,27 @@ class MessageHandler:
             self._handle_buttons()
 
     # ---------- Parte 1 – Saludos, información, promociones, ubicación----------
+    from typing import cast
+
     def _handle_text_greetings(self) -> None: 
         """ 
         Maneja los mensajes de texto que contienen promociones
         """  
-        
+        if self.wa_id is None:
+            raise ValueError("wa_id cannot be None")
         passed, msg = is_8_hours(self.wa_id)
-        
         if passed: 
             # clear_user_state(self.wa_id)  # Limpiamos el estado del usuario si ya pasaron 8 horas
             print(f"✅ Usuario desbloqueado: {msg}")
-            user_state: str = get_user_state(self.wa_id)
-            print (f"📝 Estado del usuario: {user_state!r}")    
+            
+            user_state = get_user_state(self.wa_id)
+            if user_state is None:
+                raise ValueError("user_state no puede ser None")
+            user_state = cast(str, user_state)
+
+            print(f"📝 Estado del usuario: {user_state!r}")    
+
             if self.wants_promotions():
-                
                 # Continua con el flujo normal
             
                 if self.horario == True:  # Esto lo tengo que cambiar por debugging <-------
@@ -67,7 +75,7 @@ class MessageHandler:
                     
                     lab.politica_privacidad()
                     lab.ha_sido_paciente()             
-                    
+                
                 else:
                     send_whatsapp_message(BUSINESS_PHONE_NUMBER_ID, self.wa_id,
                         f"¡Hola {self.name or 'paciente'}! Actualmente no nos encontramos en la oficina :(. "
@@ -129,8 +137,6 @@ class MessageHandler:
             print(f"❌ Usuario bloqueado: {msg}")
             send_whatsapp_message(BUSINESS_PHONE_NUMBER_ID, self.wa_id, msg)
             return
-                 
-        
 
     # ---------- Parte 2 – Estados de Laboratorio ----------
     def _handle_lab_states(self) -> None:
@@ -138,9 +144,12 @@ class MessageHandler:
         Gestiona los estados del usuario, dependiendo del estado cambia el flujo del bot.
         """
         from flows.laboratorio import Laboratorio
-
+        if self.wa_id is None:
+            raise ValueError("wa_id cannot be None")
         lab  = Laboratorio(self)
-        state = get_user_state(self.wa_id)
+        state = cast(str, get_user_state(self.wa_id))
+        if state is None:
+            raise ValueError("user_state no puede ser None")
         
         match state:
             case"esperando_orden_medica":
