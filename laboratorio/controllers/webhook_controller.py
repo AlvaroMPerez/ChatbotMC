@@ -16,6 +16,7 @@ from utils.helpers import (esta_en_horario,
                            unix_to_america)
 from typing import Optional
 
+
 load_dotenv()
 
 
@@ -29,7 +30,7 @@ webhook_bp = Blueprint('webhook', __name__)
 @webhook_bp.route('/webhook', methods=['POST'])
 def webhook():
     """Maneja los mensajes entrantes de WhatsApp"""
-
+    # print("JSON: ", request.json)
     # Verifica los payloads SHA256
     signature = request.headers.get("X-Hub-Signature-256")
     if signature and "=" in signature:
@@ -39,9 +40,11 @@ def webhook():
         return "forbbiden",403
     
     if not signature:
+        print("Falta firma")
         abort(400,"Falta firma")
     
     if sha_name != "sha256":
+        print("Algoritmo sha no soportado")
         abort(400, "Algoritmo sha no soportado")
 
     # Genera la firma propia usando APP_SECRET & hmac https://docs.python.org/3/library/hmac.html
@@ -50,8 +53,8 @@ def webhook():
     mac = hmac.new(APP_SECRET.encode(), request.data, hashlib.sha256)
     expected_hash = mac.hexdigest()
     if not hmac.compare_digest(expected_hash, sha_signature):
+        print("Firma no valida")
         abort(400, "Firma no valida")
-
     # freccuency
     name:str | None = None
     wa_id:str = ""

@@ -7,13 +7,12 @@ load_dotenv()
 
 WEBHOOK_VERIFY_TOKEN = os.getenv('WEBHOOK_VERIFY_TOKEN')
 GRAPH_API_TOKEN=os.getenv('GRAPH_API_TOKEN')
-API_VERSION = os.getenv('API_VERSION')
-APP_SECRET = os.getenv('APP_SECRET')
+API_VERSION=os.getenv('API_VERSION')
 BUSINESS_PHONE_NUMBER_ID = os.getenv('BUSINESS_PHONE_NUMBER_ID')
-PORT = int(os.getenv('PORT', 5050))
 
-def send_whatsapp_message(BUSINESS_PHONE_NUMBER_ID, recipient, message_body, context_message_id=None):
+def send_whatsapp_message(BUSINESS_PHONE_NUMBER_ID, recipient, message_body):
     # Envía un mensaje de WhatsApp
+    print(f"Enviando mensaje a {recipient}, Bussiness ID: {BUSINESS_PHONE_NUMBER_ID}, Mansaje: {message_body} ")
     url = f"https://graph.facebook.com/{API_VERSION}/{BUSINESS_PHONE_NUMBER_ID}/messages"
 
     headers = {
@@ -25,18 +24,14 @@ def send_whatsapp_message(BUSINESS_PHONE_NUMBER_ID, recipient, message_body, con
         "messaging_product": "whatsapp",
         "to": recipient,
         "text": {"body": message_body}
-    }
-    
-    # Agregar contexto si se proporciona (para responder a un mensaje específico)
-    if context_message_id:
-        data["context"] = {"message_id": context_message_id}
-    
-    try:
+        }
+
+    try: 
         response = requests.post(url, headers=headers, json=data)
         return response.json()
-    except Exception as e:
-        print(f"Error enviando mensaje: {e}")
-        return None
+    except requests.exceptions.RequestException as e:
+        print(f"Error al enviar el mensaje: {e}")
+        return {"error": "No se pudo enviar el mensaje"}
     
 def send_whatsapp_buttons(BUSINESS_PHONE_NUMBER_ID, recipient, body_text, buttons):
     url = f"https://graph.facebook.com/{API_VERSION}/{BUSINESS_PHONE_NUMBER_ID}/messages"

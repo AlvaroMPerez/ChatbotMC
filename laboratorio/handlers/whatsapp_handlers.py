@@ -10,10 +10,14 @@ from models.user_state import (
 from utils.helpers import is_8_hours
 from flows.dudas import espere_un_momento
 from typing import Optional, cast
+from typing import cast
+from dotenv import load_dotenv
 import emoji, os
 import datetime
 import re
+import pdb
 
+load_dotenv()
 BUSINESS_PHONE_NUMBER_ID = os.getenv("BUSINESS_PHONE_NUMBER_ID")
 
 
@@ -42,16 +46,18 @@ class MessageHandler:
             self._handle_buttons()
 
     # ---------- Parte 1 – Saludos, información, promociones, ubicación----------
-    from typing import cast
-
     def _handle_text_greetings(self) -> None: 
         """ 
         Maneja los mensajes de texto que contienen promociones
         """  
+        if BUSINESS_PHONE_NUMBER_ID is None:
+            raise ValueError("BUSINESS_PHONE_NUMBER_ID no puede ser None. Asegúrate de definirlo correctamente.")
         if self.wa_id is None:
             raise ValueError("wa_id cannot be None")
         passed, msg = is_8_hours(self.wa_id)
         if passed: 
+            if get_user_state(self.wa_id) is None:
+                set_user_state(self.wa_id, "inicio")
             # clear_user_state(self.wa_id)  # Limpiamos el estado del usuario si ya pasaron 8 horas
             print(f"✅ Usuario desbloqueado: {msg}")
             
@@ -68,9 +74,10 @@ class MessageHandler:
                 if self.horario == True:  # Esto lo tengo que cambiar por debugging <-------
                     from flows.laboratorio import Laboratorio
                     lab: Laboratorio = Laboratorio(self)
-                    send_whatsapp_message(BUSINESS_PHONE_NUMBER_ID, self.wa_id,
-                        f"¡Hola {self.name or 'paciente'}! Aquí tienes información sobre nuestras promociones vigentes."
-                    )
+                    mensaje = f"¡Hola {self.name or 'paciente'}! Aquí tienes información sobre nuestras promociones vigentes."
+                    print(f"Enviando mensaje: phone_id={BUSINESS_PHONE_NUMBER_ID}, wa_id={self.wa_id}, texto='{mensaje}'")
+                    response = send_whatsapp_message(BUSINESS_PHONE_NUMBER_ID, self.wa_id, mensaje)
+                    print(f"Respuesta de WhatsApp API: {response}")
                     # ---- Inicia flujo del bot ------
                     
                     lab.politica_privacidad()
@@ -83,6 +90,8 @@ class MessageHandler:
                     )
                 
             elif self.wants_location():
+                if get_user_state(self.wa_id) is None:
+                    set_user_state(self.wa_id, "inicio")
                 """
                 Maneja los mensajes que contienen ubicación
                 """

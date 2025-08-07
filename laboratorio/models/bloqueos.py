@@ -1,8 +1,9 @@
 import sqlite3
+from typing import Optional
 
 DB_PATH = "recived_messages_ids.db"
 
-def set_bloqueo(wa_id: str, desbloqueo_ts: int):
+def set_bloqueo(wa_id: Optional[str], desbloqueo_ts: int):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("REPLACE INTO bloqueos (wa_id, desbloqueo_ts) VALUES (?, ?)", (wa_id, desbloqueo_ts))
@@ -17,7 +18,7 @@ def get_bloqueo(wa_id: str):
     conn.close()
     return row[0] if row else None
 
-def clear_bloqueo(wa_id: str):
+def clear_bloqueo(wa_id: Optional[str]) -> None:
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("DELETE FROM bloqueos WHERE wa_id = ?", (wa_id,))
