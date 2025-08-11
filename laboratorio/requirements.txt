@@ -15,6 +15,7 @@ dotenv==0.9.9
 emoji==2.14.1
 Flask==3.1.1
 frozenlist==1.7.0
+gunicorn==23.0.0
 h11==0.16.0
 h2==4.2.0
 hpack==4.1.0
@@ -42,6 +43,7 @@ onedrivesdk==2.0.1
 opentelemetry-api==1.36.0
 opentelemetry-sdk==1.36.0
 opentelemetry-semantic-conventions==0.57b0
+packaging==25.0
 pip_system_certs==5.2
 propcache==0.3.2
 pycparser==2.22
