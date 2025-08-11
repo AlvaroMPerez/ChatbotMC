@@ -3,6 +3,10 @@ from microsoft.graph import Graph
 from typing import List
 
 async def link_promociones() -> List[str] | None:
+    """
+    Función asincrona que consume la graph api de Microsoft 
+    Genera un token y entra a una carpeta "promociones" para generar los links de descarga de cada imagen dentro de ella.
+    """
     graph = Graph()
     try:
         token = await graph.get_token()
