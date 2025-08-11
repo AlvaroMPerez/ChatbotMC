@@ -63,6 +63,33 @@ def send_whatsapp_buttons(BUSINESS_PHONE_NUMBER_ID, recipient, body_text, button
         print(f"Error enviando mensaje: {e}")
         return None
 
+def send_whatsapp_img(BUSINESS_PHONE_NUMBER_ID, recipient,link):
+    url = f"https://graph.facebook.com/{API_VERSION}/{BUSINESS_PHONE_NUMBER_ID}/messages"
+    
+    headers = {
+        "Authorization": f"Bearer {GRAPH_API_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+    "messaging_product": "whatsapp",
+    "recipient_type": "individual",
+    "to": recipient,
+    "type": "image",
+    "image": {
+        "link": link
+        }
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        print(response.json())
+        return response.json()
+    except Exception as e:
+        print(f"Error enviando mensaje: {e}")
+        return None
+
+
 def mark_message_as_read(BUSINESS_PHONE_NUMBER_ID, message_id):
     """Marca un mensaje como leído"""
     url = f"https://graph.facebook.com/{API_VERSION}/{BUSINESS_PHONE_NUMBER_ID}/messages"

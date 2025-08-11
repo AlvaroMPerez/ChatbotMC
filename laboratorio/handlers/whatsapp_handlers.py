@@ -1,21 +1,23 @@
 # handlers/message_handler.py
 from services.whatsapp_service import (
     send_whatsapp_message,
-    send_whatsapp_buttons)
+    send_whatsapp_buttons,
+    send_whatsapp_img)
 from models.user_state import (
     get_user_state,
     set_user_state,
     clear_user_state
 )
+from microsoft.enviar_promociones import link_promociones
 from utils.helpers import is_8_hours
 from flows.dudas import espere_un_momento
-from typing import Optional, cast
-from typing import cast
+from typing import Optional, cast, List
 from dotenv import load_dotenv
 import emoji, os
 import datetime
 import re
 import pdb
+import asyncio
 
 load_dotenv()
 BUSINESS_PHONE_NUMBER_ID = os.getenv("BUSINESS_PHONE_NUMBER_ID")
@@ -71,15 +73,26 @@ class MessageHandler:
             if self.wants_promotions():
                 # Continua con el flujo normal
             
-                if self.horario == True:  # Esto lo tengo que cambiar por debugging <-------
+                if self.horario == True:
                     from flows.laboratorio import Laboratorio
                     lab: Laboratorio = Laboratorio(self)
-                    mensaje = f"¡Hola {self.name or 'paciente'}! Aquí tienes información sobre nuestras promociones vigentes."
-                    print(f"Enviando mensaje: phone_id={BUSINESS_PHONE_NUMBER_ID}, wa_id={self.wa_id}, texto='{mensaje}'")
-                    response = send_whatsapp_message(BUSINESS_PHONE_NUMBER_ID, self.wa_id, mensaje)
-                    print(f"Respuesta de WhatsApp API: {response}")
-                    # ---- Inicia flujo del bot ------
                     
+                    # ---- Inicia flujo del bot ------
+                    links: List[str] = asyncio.run(link_promociones()) or []
+                    # Si hay más de una promoción manda imágenes
+                    if len(links) > 1:
+                        mensaje = f"¡Hola {self.name or 'paciente'}! Aquí tienes información sobre nuestras promociones vigentes."
+                        print(f"Enviando mensaje: phone_id={BUSINESS_PHONE_NUMBER_ID}, wa_id={self.wa_id}, texto='{mensaje}'")
+                        response = send_whatsapp_message(BUSINESS_PHONE_NUMBER_ID, self.wa_id, mensaje)
+                        for link in links:
+                            send_whatsapp_img(BUSINESS_PHONE_NUMBER_ID,self.wa_id,link)
+                            pass
+                        # Si no, sólo envia que no hay promociones
+                    else:
+                        mensaje = f"¡Hola {self.name or 'paciente'}! por el momento no tenemos promociones vigentes, pero nuestros precios son los mejores!"
+                        print(f"Enviando mensaje: phone_id={BUSINESS_PHONE_NUMBER_ID}, wa_id={self.wa_id}, texto='{mensaje}'")
+                        response = send_whatsapp_message(BUSINESS_PHONE_NUMBER_ID, self.wa_id, mensaje)
+
                     lab.politica_privacidad()
                     lab.ha_sido_paciente()             
                 
