@@ -2,7 +2,7 @@ from flask import Flask
 import os
 from dotenv import load_dotenv
 from controllers.webhook_controller import webhook_bp
-from db.init_db import init_db
+from db.init_mysql_db import init_db
 
 load_dotenv()
 GRAPH_API_TOKEN = os.getenv('GRAPH_API_TOKEN')
